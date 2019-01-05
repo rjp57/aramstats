@@ -1,5 +1,5 @@
 # Aram Stat Collector
-A simple program that pulls ARAM stats from the Riot API for the given summoner name.
+A simple program that pulls ARAM stats from the Riot API for the given summoner name. Stores results as a .csv
 This will require a Riot Games API key to use (anyone can get one by simply going to https://developer.riotgames.com/)
 
 Instructions to run:
