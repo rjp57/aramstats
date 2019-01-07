@@ -3,7 +3,7 @@ A simple program that pulls ARAM stats from the Riot API for the given summoner 
 This will require a Riot Games API key to use (anyone can get one by simply going to https://developer.riotgames.com/)
 
 Instructions to run:
-1. Install Python
+1. Install Python (Python 3 or Above)
 2. Run 'pip install riotwatcher'
 3. Navigate to the directory you saved the file and run 'python aram.py'
 
