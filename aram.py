@@ -1,15 +1,11 @@
-
 from riotwatcher import RiotWatcher
 import csv
 api_key = input('Enter your Riot Games API Key. (https://developer.riotgames.com/)\n')
 watcher = RiotWatcher(api_key) 
 my_region = 'na1'
-summoner_name = input('What is your summoner name?\n')
-me = watcher.summoner.by_name(my_region, summoner_name)
 version = watcher.data_dragon.versions_for_region(my_region)['v']
-account_id = me['accountId']
-games_to_check = input('How many games to look at? Max of 1000 and anything more than 100 will take a while\n')
-
+dragon = watcher.data_dragon.champions(version)
+champ_data = dragon['data']
 begin = 0
 end = 100
 champs_played = []
@@ -20,31 +16,6 @@ champion_losses = {}
 champion_kills = {}
 champion_deaths = {}
 champion_assists = {}
-
-while end <= 1000:
-	my_aram_stats = watcher.match.matchlist_by_account(my_region, account_id, begin_index = begin, end_index = end, queue = 450)
-	matches = my_aram_stats['matches']
-	for game in matches:
-		champs_played.append(game['champion'])
-		game_ids.append(game['gameId'])
-	begin += 100
-	end += 100
-
-
-dragon = watcher.data_dragon.champions(version)
-champ_data = dragon['data']
-
-
-for champion in champ_data:
-	name = champ_data[champion]['id']
-	id = champ_data[champion]['key']
-	champion_ids[id] = name
-	champion_wins[name] = 0
-	champion_losses[name] = 0
-	champion_kills[name] = 0
-	champion_deaths[name] = 0
-	champion_assists[name] = 0
-
 win_counter = 0
 loss_counter = 0
 kill_counter = 0
@@ -55,8 +26,39 @@ triple_counter = 0
 quadra_counter = 0
 penta_counter = 0
 damage_dealt = 0
+#************** End Initial Setup ******************************************************
 
-for index, x in enumerate(game_ids[:int(games_to_check)]):
+summoner_name = input('What is your summoner name?\n')
+me = watcher.summoner.by_name(my_region, summoner_name)
+account_id = me['accountId']
+games_to_check = input('How many games to look at? Max of 1000 and anything more than 100 will take a while\n')
+
+#************** End Input **************************************************************************************
+
+
+while end <= 1000: # Grabs all of the Match objects for the given player within the given range
+	my_aram_stats = watcher.match.matchlist_by_account(my_region, account_id, begin_index = begin, end_index = end, queue = 450)
+	matches = my_aram_stats['matches']
+	for game in matches:
+		champs_played.append(game['champion'])
+		game_ids.append(game['gameId'])
+	begin += 100
+	end += 100
+
+
+for champion in champ_data: # Sets up the per-champion stats arrays to contain all of the current champions in LoL. Should mean the program is patch-proof.
+	name = champ_data[champion]['id']
+	id = champ_data[champion]['key']
+	champion_ids[id] = name
+	champion_wins[name] = 0
+	champion_losses[name] = 0
+	champion_kills[name] = 0
+	champion_deaths[name] = 0
+	champion_assists[name] = 0
+
+
+
+for index, x in enumerate(game_ids[:int(games_to_check)]): # Loop that iterates through all of the match objects and stores stats both per champion and overall
 	match_info = watcher.match.by_id(my_region, x)	
 
 	participants = match_info['participants']
@@ -90,12 +92,12 @@ for index, x in enumerate(game_ids[:int(games_to_check)]):
 			damage_dealt += player['stats']['totalDamageDealtToChampions']
 	print('')
 
-	
+# Calculate overall stats 
 KDA = (kill_counter + assist_counter)/death_counter
 winrate = (win_counter/(win_counter+loss_counter)) * 100
 total_damage = damage_dealt/(win_counter+loss_counter)
 
-
+# Print summary
 print('Total wins: ' + str(win_counter))
 print('Total losses: ' + str(loss_counter))
 print('Winrate: ' + str(round(winrate, 1)) + '%')
@@ -107,7 +109,7 @@ print('Total Penta Kills: ' + str(penta_counter))
 print('Average Damage Dealt to Champions: ' + str(round(total_damage, 1)))
 print('')
 
-
+# Save the detailed per-champion stats as a CSV
 with open('champion_stats.csv', 'w', newline= '') as csvfile:
 	columnnames = ['Champion','Games Played', 'Wins', 'Losses', 'Winrate', 'KDA']
 	outputwriter = csv.writer(csvfile, dialect='excel')
